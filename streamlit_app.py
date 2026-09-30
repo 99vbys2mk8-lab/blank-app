@@ -56,7 +56,10 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
         if "image_url" in message and message["image_url"]:
-            st.image(message["image_url"])
+            try:
+                st.image(message["image_url"])
+            except Exception:
+                st.write("*(Image preview unavailable)*")
 
 # User input handling
 if prompt := st.chat_input("What would you like, sir?"):
@@ -69,9 +72,9 @@ if prompt := st.chat_input("What would you like, sir?"):
         image_prompt = prompt.split(":", 1)[1].strip() if ":" in prompt else prompt
         response_text = f"Generating visual asset for: '{image_prompt}'"
         
-        # Using a public un-keyed image generation endpoint or placeholder logic for the prompt
-        # You can point this to Pollinations.ai or another free generator endpoint instantly:
-        image_url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(image_prompt)}"
+        # Use Pollinations direct image URL format with width/height parameters for stability
+        safe_prompt = requests.utils.quote(image_prompt)
+        image_url = f"https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=1024&nologo=true"
         
         st.session_state.messages.append({
             "role": "assistant", 
@@ -84,7 +87,6 @@ if prompt := st.chat_input("What would you like, sir?"):
             st.image(image_url)
     else:
         # Standard research/text response handling
-        # If an API key is provided, we can route it via OpenRouter, otherwise provide intelligent local fallback
         if api_key:
             try:
                 headers = {
@@ -92,7 +94,7 @@ if prompt := st.chat_input("What would you like, sir?"):
                     "Content-Type": "application/json"
                 }
                 payload = {
-                    "model": "deepseek/deepseek-chat", # or any unrestricted model route
+                    "model": "deepseek/deepseek-chat", 
                     "messages": [{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
                 }
                 res = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
@@ -101,11 +103,10 @@ if prompt := st.chat_input("What would you like, sir?"):
             except Exception as e:
                 response_text = f"Error connecting to API gateway: {str(e)}"
         else:
-            # Smart default lookup simulation for your questions (like parts, cars, recipes)
             if "gr86" in prompt.lower():
                 response_text = "Regarding the Toyota GR86 filter: Common OEM and aftermarket options include the Toyota OEM oil filter (Suits FA24 engine, part # SU003-04702) or K&N PS-7035 / HKS hybrid filters for improved flow."
             else:
-                response_text = f"Analyzing query: '{prompt}'. To unlock full live model inference and deep research, add your OpenRouter API key in the sidebar, or ask me to generate an image by typing 'generate: [your idea]'."
+                response_text = f"Analyzing query: '{prompt}'. To unlock full live model inference and deep research, add your OpenRouter API key in the sidebar, or generate images by typing 'generate: [your idea]'."
 
         st.session_state.messages.append({"role": "assistant", "content": response_text})
         with st.chat_message("assistant"):
