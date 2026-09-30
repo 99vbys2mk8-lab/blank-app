@@ -61,8 +61,8 @@ if prompt := st.chat_input("What would you like, sir?"):
   with st.chat_message("user"):
     st.markdown(prompt)
 
-  # Generate assistant response
-  response = f"Command received: '{prompt}'."
+  # Generate intelligent assistant response
+  response = f"At your service, sir. I have logged your command: '{prompt}'. All systems are fully operational."
   st.session_state.messages.append({"role": "assistant", "content": response})
 
   with st.chat_message("assistant"):
