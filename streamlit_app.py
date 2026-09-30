@@ -51,35 +51,42 @@ for message in st.session_state.messages:
         st.markdown(message["content"], unsafe_allow_html=True)
 
 # User input handling
-if prompt := st.chat_input("What are you looking for today? (e.g., 'Find me the best oil filter for a GR86')"):
+if prompt := st.chat_input("What are you looking for today?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Intelligent Product Recommendation Logic
-    query_lower = prompt.lower()
+    # Universal Product Scout Logic (Triggers on any query)
+    encoded_query = urllib.parse.quote(prompt)
+    google_shopping_url = f"https://www.google.com/search?tbm=shop&q={encoded_query}"
+    amazon_url = f"https://www.amazon.com/s?k={encoded_query}"
     
-    if any(keyword in query_lower for keyword in ["find", "best", "buy", "filter", "oil", "part", "search", "recommend"]):
-        encoded_query = urllib.parse.quote(prompt)
-        google_shopping_url = f"https://www.google.com/search?tbm=shop&q={encoded_query}"
-        amazon_url = f"https://www.amazon.com/s?k={encoded_query}"
-        
-        response_text = f"""At your service, sir. Here are the top recommendations based on your request for **"{prompt}"**:
+    # Custom intelligence injection for specific car parts or general requests
+    if "brake" in prompt.lower() or "pad" in prompt.lower():
+        breakdown_text = """### 🏆 Top Recommendations & Breakdown
+1. **OEM / Street Performance Compound**
+   - **Why it's the best:** Offers balanced initial bite, low dust, and reliable cold-stopping power for daily driving without squealing.
+   - **Check availability:** [Google Shopping]({google_shopping_url}) | [Amazon]({amazon_url})
 
-### 🏆 Top Recommendations & Breakdown
+2. **Track-Day / High-Friction Compound (e.g., EBC Redstuff/Yellowstuff or Project Mu)**
+   - **Why it's the best:** Higher temperature threshold and aggressive bite designed to prevent brake fade under heavy canyon carving or track sessions.
+   - **Check availability:** [Google Shopping Search]({google_shopping_url})"""
+    else:
+        breakdown_text = f"""### 🏆 Top Recommendations & Breakdown
+1. **Top-Rated Performance Pick**
+   - **Why it's the best:** Balances superior material quality, reliability, and user ratings for maximum value.
+   - **Check availability:** [Google Shopping]({google_shopping_url}) | [Amazon]({amazon_url})
 
-1. **OEM / Factory Specification**
-   - **Why it's the best:** Ensures absolute compatibility, factory warranty compliance, and precise engineering tolerances without aftermarket guesswork.
-   - **Check availability:** [Google Shopping Search]({google_shopping_url}) | [Amazon Search]({amazon_url})
+2. **OEM Factory Standard**
+   - **Why it's the best:** Direct manufacturer fitment with zero modification required and guaranteed factory compatibility.
+   - **Check availability:** [Google Shopping Search]({google_shopping_url})"""
 
-2. **High-Performance Aftermarket Variant**
-   - **Why it's the best:** Often upgraded with superior materials (like synthetic filtration media or higher flow rates) designed for intensive use or track conditions.
-   - **Check availability:** [Google Shopping Search]({google_shopping_url})
+    response_text = f"""At your service, sir. Here is the breakdown for **"{prompt}"**:
+
+{breakdown_text}
 
 ### 💡 Quick Advice
-Always verify part numbers or model specifications against your specific year and trim before pulling the trigger. Let me know if you want me to look up alternative brands or specs!"""
-    else:
-        response_text = f"Analyzing your request: '{prompt}'. To look up products, try phrasing your prompt with words like 'Find the best...' or 'Search for...'"
+Always cross-reference part numbers with your specific vehicle year and trim. Click the links above to view live pricing and options!"""
 
     st.session_state.messages.append({"role": "assistant", "content": response_text})
     with st.chat_message("assistant"):
